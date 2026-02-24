@@ -1,0 +1,25 @@
+# Neo4j MCP Server Configuration
+
+server_name: "neo4j-mcp"
+server_description: "MCP server for Neo4j graph database"
+
+# Neo4j Connection
+uri: "bolt://localhost:7687"
+# user: Set via NEO4J_MCP_USER environment variable (default: neo4j)
+# password: Set via NEO4J_MCP_PASSWORD environment variable
+database: "neo4j"
+max_connection_lifetime: 3600
+max_connection_pool_size: 50
+connection_timeout: 30.0
+
+# Mock Mode (for testing without Neo4j)
+mock_mode: false
+
+# HTTP Transport
+enable_http_transport: true
+http_host: "127.0.0.1"
+http_port: 3045
+
+# Logging
+log_level: "INFO"
+log_json: true
