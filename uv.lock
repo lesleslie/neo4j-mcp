@@ -665,7 +665,7 @@ wheels = [
 
 [[package]]
 name = "crackerjack"
-version = "0.55.5"
+version = "0.55.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -727,9 +727,9 @@ dependencies = [
     { name = "websockets" },
     { name = "zuban" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/28/1c40c0df69fecdf5790448454792807d4168d1f4608bf87a4aadf5c5ac90/crackerjack-0.55.5.tar.gz", hash = "sha256:943ea4efc0b8dd7ca2e8df49223d04218570d47e83043fb02eaae48056763b64", size = 3749543, upload-time = "2026-05-07T13:26:18.414Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/a6/076e0ee15c5832e322cf9be89d7b2fcafbada9aa81b675bbea36bc9287e2/crackerjack-0.55.9.tar.gz", hash = "sha256:70603290bb8ae1ef32ee7ae00ec68f8cb9492bc905cf9075f0fbb20f83f16f5e", size = 3752118, upload-time = "2026-05-10T13:09:11.499Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/41/a1/93d8648b576b261e4557fdc71c7e1f3c397768022a05052a6d1b2987c511/crackerjack-0.55.5-py3-none-any.whl", hash = "sha256:923586990fcb3879c6e5fe8a7e4037581f2618255b383517a8a1ee2f16db41f0", size = 1368087, upload-time = "2026-05-07T13:26:15.569Z" },
+    { url = "https://files.pythonhosted.org/packages/20/e8/73acc7a1651dde2c86f181445aba481b3493a5d7c020a7cfb62c9fc7e357/crackerjack-0.55.9-py3-none-any.whl", hash = "sha256:a20afcc14a937ca4351be0674afb4627d2eeed6512b241fcee87f9e877453a52", size = 1368623, upload-time = "2026-05-10T13:09:17.228Z" },
 ]
 
 [[package]]
@@ -2422,7 +2422,7 @@ wheels = [
 
 [[package]]
 name = "neo4j-mcp"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
@@ -2548,7 +2548,7 @@ wheels = [
 
 [[package]]
 name = "oneiric"
-version = "0.9.9"
+version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiobreaker" },
@@ -2571,9 +2571,9 @@ dependencies = [
     { name = "typer" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/00/ccd2c44882b4bc7a05bc11fc9f302c6f125fc15e17fcad42b2977ef1f401/oneiric-0.9.9.tar.gz", hash = "sha256:58e7177fd65a4e08920f49ca92f9d79876064da42d8044ccb137c7ce0a1fa6e1", size = 303253, upload-time = "2026-05-10T09:02:00.831Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/46/8ab80db735b82bac5a403a13edef487e63fd7cb0bbd29d6a68e160484aa2/oneiric-0.10.0.tar.gz", hash = "sha256:d480bea4d3c98716069d26a8585f8595d84ada9f4ef979f74f74807b6c494116", size = 304331, upload-time = "2026-05-10T12:06:46.632Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/bf/b9a6e9a7fc61c04569034a4b8b0c6120b6078b941d48210524714884b805/oneiric-0.9.9-py3-none-any.whl", hash = "sha256:50d0f7c56db1c35749dfbb4a878ade5a682dd95463259262d59b0a40175f9d69", size = 353974, upload-time = "2026-05-10T09:01:59.447Z" },
+    { url = "https://files.pythonhosted.org/packages/21/71/6ae1bd9be3fb4df568c8e21c975e0b7ca21bdaf38f0fad33d654f46a3fa1/oneiric-0.10.0-py3-none-any.whl", hash = "sha256:fcb84c8dcfd2c59a0614146b700427a3a1e9d69a5037a5e98ca683cb42532f41", size = 355460, upload-time = "2026-05-10T12:06:45.114Z" },
 ]
 
 [[package]]
@@ -3403,11 +3403,11 @@ wheels = [
 
 [[package]]
 name = "python-multipart"
-version = "0.0.27"
+version = "0.0.28"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/69/9b/f23807317a113dc36e74e75eb265a02dd1a4d9082abc3c1064acd22997c4/python_multipart-0.0.27.tar.gz", hash = "sha256:9870a6a8c5a20a5bf4f07c017bd1489006ff8836cff097b6933355ee2b49b602", size = 44043, upload-time = "2026-04-27T10:51:26.649Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/54/a85eb421fbdd5007bc5af39d0f4ed9fa609e0fedbfdc2adcf0b34526870e/python_multipart-0.0.28.tar.gz", hash = "sha256:8550da197eac0f7ab748961fc9509b999fa2662ea25cef857f05249f6893c0f8", size = 45314, upload-time = "2026-05-10T11:05:16.596Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/78/4126abcbdbd3c559d43e0db7f7b9173fc6befe45d39a2856cc0b8ec2a5a6/python_multipart-0.0.27-py3-none-any.whl", hash = "sha256:6fccfad17a27334bd0193681b369f476eda3409f17381a2d65aa7df3f7275645", size = 29254, upload-time = "2026-04-27T10:51:24.997Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/a2/43bbc5860b5034e2af4ef99a0e04d726ff329c43e192ef3abaa8d7ecfce5/python_multipart-0.0.28-py3-none-any.whl", hash = "sha256:10faac07eb966c3f48dc415f9dee46c04cb10d58d30a35677db8027c825ed9b6", size = 29438, upload-time = "2026-05-10T11:05:15.052Z" },
 ]
 
 [[package]]
