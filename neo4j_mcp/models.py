@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class NodeLabel(str, Enum):
+class NodeLabel(StrEnum):
     """Common node labels."""
 
     PERSON = "Person"
@@ -20,7 +19,7 @@ class NodeLabel(str, Enum):
     ENTITY = "Entity"
 
 
-class RelationshipType(str, Enum):
+class RelationshipType(StrEnum):
     """Common relationship types."""
 
     KNOWS = "KNOWS"
@@ -161,7 +160,9 @@ class ToolResponse(BaseModel):
     message: str = Field(description="Human-readable result message")
     data: dict[str, Any] | None = Field(default=None, description="Response data")
     error: str | None = Field(default=None, description="Error message if failed")
-    next_steps: list[str] | None = Field(default=None, description="Suggested next actions")
+    next_steps: list[str] | None = Field(
+        default=None, description="Suggested next actions"
+    )
 
 
 class Neo4jError(BaseModel):

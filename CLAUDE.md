@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with this repository.
 
+For a shorter, tool-neutral bootstrap document, start with `AGENTS.md`.
+
 ## Project Overview
 
 **neo4j-mcp** is an MCP server for Neo4j graph database operations, providing graph query and node/relationship management, and path finding capabilities via the Model Context Protocol.

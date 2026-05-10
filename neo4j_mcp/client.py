@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from neo4j import AsyncGraphDatabase, AsyncDriver, AsyncSession
+from neo4j import AsyncDriver, AsyncGraphDatabase, AsyncSession
 
 from neo4j_mcp.config import get_logger_instance, get_settings
 from neo4j_mcp.models import (
@@ -203,7 +203,9 @@ class Neo4jClient:
         if self.settings.mock_mode:
             return self._mock_create_relationship(rel)
 
-        props_str = ", ".join(f"{k}: ${k}" for k in rel.properties) if rel.properties else ""
+        props_str = (
+            ", ".join(f"{k}: ${k}" for k in rel.properties) if rel.properties else ""
+        )
         props_clause = f" {{{props_str}}}" if props_str else ""
 
         query = f"""

@@ -11,12 +11,11 @@ import warnings
 os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 warnings.filterwarnings("ignore", message=".*PyTorch.*TensorFlow.*Flax.*")
 
-import uvicorn
+import uvicorn  # noqa: E402
+from mcp_common import MCPServerCLIFactory, MCPServerSettings  # noqa: E402
+from mcp_common.cli.health import RuntimeHealthSnapshot  # noqa: E402
 
-from mcp_common import MCPServerCLIFactory, MCPServerSettings
-from mcp_common.cli.health import RuntimeHealthSnapshot
-
-from neo4j_mcp import __version__
+from neo4j_mcp import __version__  # noqa: E402
 
 
 class Neo4jSettings(MCPServerSettings):

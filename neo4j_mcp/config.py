@@ -147,6 +147,7 @@ def setup_logging(settings: Neo4jSettings | None = None) -> None:
     else:
         # Fallback to standard logging
         import logging
+
         logging.basicConfig(
             level=getattr(logging, settings.log_level.upper(), logging.INFO),
             format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -158,6 +159,7 @@ def get_logger_instance(name: str = "neo4j-mcp") -> Any:
     if ONEIRIC_LOGGING_AVAILABLE:
         return get_logger(name)
     import logging
+
     return logging.getLogger(name)
 
 
