@@ -86,8 +86,8 @@ class Neo4jClient:
             return []
 
         async with session:
-            result = await session.run(query, params or {})
-            records = [dict(record) async for record in result]
+            result = await session.run(query, params)
+            records = [record.copy() async for record in result]
             return records
 
     # Node Operations
@@ -185,16 +185,14 @@ class Neo4jClient:
 
         async with session:
             result = await session.run(query, params)
-            nodes = []
-            async for record in result:
-                nodes.append(
-                    Node(
-                        id=str(record["id"]),
-                        labels=record["labels"],
-                        properties=record["properties"],
-                    )
+            return [
+                Node(
+                    id=str(record["id"]),
+                    labels=record["labels"],
+                    properties=record["properties"],
                 )
-            return nodes
+                async for record in result
+            ]
 
     # Relationship Operations
 
@@ -218,8 +216,7 @@ class Neo4jClient:
         params = {
             "start_id": int(rel.start_node_id),
             "end_id": int(rel.end_node_id),
-            **rel.properties,
-        }
+        } | rel.properties
 
         session = self._get_session()
         if session is None:
@@ -307,8 +304,8 @@ class Neo4jClient:
                 nodes = [
                     Node(
                         id=str(node.element_id),
-                        labels=list(node.labels),
-                        properties=dict(node),
+                        labels=node.labels.copy(),
+                        properties=node.copy(),
                     )
                     for node in path_data.nodes
                 ]
@@ -318,7 +315,7 @@ class Neo4jClient:
                         type=rel.type,
                         start_node_id=str(rel.start_node.element_id),
                         end_node_id=str(rel.end_node.element_id),
-                        properties=dict(rel),
+                        properties=rel.copy(),
                     )
                     for rel in path_data.relationships
                 ]
@@ -345,29 +342,27 @@ class Neo4jClient:
         async with session:
             # Get indexes
             indexes_result = await session.run("SHOW INDEXES")
-            indexes = []
-            async for record in indexes_result:
-                indexes.append(
-                    IndexInfo(
-                        name=record.get("name", ""),
-                        labels_or_types=record.get("labelsOrTypes", []),
-                        properties=record.get("properties", []),
-                        uniqueness=record.get("uniqueness", "NONUNIQUE") == "UNIQUE",
-                    )
+            indexes = [
+                IndexInfo(
+                    name=record.get("name", ""),
+                    labels_or_types=record.get("labelsOrTypes", []),
+                    properties=record.get("properties", []),
+                    uniqueness=record.get("uniqueness", "NONUNIQUE") == "UNIQUE",
                 )
+                async for record in indexes_result
+            ]
 
             # Get constraints
             constraints_result = await session.run("SHOW CONSTRAINTS")
-            constraints = []
-            async for record in constraints_result:
-                constraints.append(
-                    ConstraintInfo(
-                        name=record.get("name", ""),
-                        type=record.get("type", ""),
-                        label=record.get("labelsOrTypes", [""])[0],
-                        properties=record.get("properties", []),
-                    )
+            constraints = [
+                ConstraintInfo(
+                    name=record.get("name", ""),
+                    type=record.get("type", ""),
+                    label=record.get("labelsOrTypes", [""])[0],
+                    properties=record.get("properties", []),
                 )
+                async for record in constraints_result
+            ]
 
             # Get labels
             labels_result = await session.run("CALL db.labels()")
