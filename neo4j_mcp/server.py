@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
 from mcp_common.fastmcp import FastMCP
+from mcp_common.health import register_http_health_route
 
 from neo4j_mcp import __version__
 from neo4j_mcp.client import Neo4jClient
@@ -36,15 +37,7 @@ def create_app() -> FastMCP:
 
     app = FastMCP(name=APP_NAME, version=APP_VERSION)
 
-    # HTTP health endpoint for Claude Code compatibility
-    @app.custom_route("/health", methods=["GET"])
-    async def health_check(request: Any) -> Any:
-        """HTTP health check endpoint for Claude Code `mcp list` compatibility."""
-        from starlette.responses import JSONResponse
-
-        return JSONResponse(
-            {"status": "ok", "service": "neo4j", "version": APP_VERSION}
-        )
+    register_http_health_route(app, service_name="neo4j", version=APP_VERSION)
 
     @app.custom_route("/healthz", methods=["GET"])
     async def healthz_check(request: Any) -> Any:

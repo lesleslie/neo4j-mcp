@@ -28,6 +28,9 @@ dependencies = [
     "uvicorn>=0.30.0",
 ]
 
+[tool.uv.sources]
+mcp-common = { path = "../mcp-common", editable = true }
+
 [dependency-groups]
 dev = [
     "crackerjack>=0.50.1",
