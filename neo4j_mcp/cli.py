@@ -12,14 +12,15 @@ os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 warnings.filterwarnings("ignore", message=".*PyTorch.*TensorFlow.*Flax.*")
 
 import uvicorn  # noqa: E402
-from mcp_common import MCPServerCLIFactory, MCPServerSettings  # noqa: E402
+from mcp_common import MCPServerCLIFactory  # noqa: E402
 from mcp_common.cli.health import RuntimeHealthSnapshot  # noqa: E402
+from oneiric.core.config import OneiricMCPConfig  # noqa: E402
 
 from neo4j_mcp import __version__  # noqa: E402
 
 
-class Neo4jSettings(MCPServerSettings):
-    """Neo4j MCP server settings extending MCPServerSettings."""
+class Neo4jSettings(OneiricMCPConfig):
+    """Neo4j MCP server settings extending OneiricMCPConfig."""
 
     server_name: str = "neo4j-mcp"
     http_port: int = 3045

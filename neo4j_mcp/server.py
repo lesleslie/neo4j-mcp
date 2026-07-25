@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
-from fastmcp import FastMCP
+from mcp_common.fastmcp import FastMCP
 
 from neo4j_mcp import __version__
 from neo4j_mcp.client import Neo4jClient
