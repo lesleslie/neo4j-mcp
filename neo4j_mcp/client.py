@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from neo4j import AsyncDriver, AsyncGraphDatabase, AsyncSession
+from neo4j import AsyncDriver, AsyncGraphDatabase, AsyncSession, Query
 
 from neo4j_mcp.config import get_logger_instance, get_settings
 from neo4j_mcp.models import (
@@ -86,8 +86,8 @@ class Neo4jClient:
             return []
 
         async with session:
-            result = await session.run(query, params)  # ty: ignore[invalid-argument-type]
-            records = [dict(record) async for record in result]  # ty: ignore[unresolved-attribute]
+            result = await session.run(Query(query), params)
+            records = [dict(record) async for record in result]
             return records
 
     # Node Operations
@@ -107,7 +107,7 @@ class Neo4jClient:
             return Node(labels=node.labels, properties=node.properties)
 
         async with session:
-            result = await session.run(query, node.properties)  # ty: ignore[invalid-argument-type]
+            result = await session.run(Query(query), node.properties)
             record = await result.single()
             if record:
                 return Node(
@@ -129,7 +129,7 @@ class Neo4jClient:
             return None
 
         async with session:
-            result = await session.run(query, {"id": int(node_id)})  # ty: ignore[invalid-argument-type]
+            result = await session.run(Query(query), {"id": int(node_id)})
             record = await result.single()
             if record:
                 return Node(
@@ -151,7 +151,7 @@ class Neo4jClient:
             return True
 
         async with session:
-            await session.run(query, {"id": int(node_id)})  # ty: ignore[invalid-argument-type]
+            await session.run(Query(query), {"id": int(node_id)})
             return True
 
     async def find_nodes(
@@ -184,7 +184,7 @@ class Neo4jClient:
             return []
 
         async with session:
-            result = await session.run(query, params)  # ty: ignore[invalid-argument-type]
+            result = await session.run(Query(query), params)
             return [
                 Node(
                     id=str(record["id"]),
@@ -228,7 +228,7 @@ class Neo4jClient:
             )
 
         async with session:
-            result = await session.run(query, params)  # ty: ignore[invalid-argument-type]
+            result = await session.run(Query(query), params)
             record = await result.single()
             if record:
                 return Relationship(
@@ -257,7 +257,7 @@ class Neo4jClient:
             return True
 
         async with session:
-            await session.run(query, {"id": int(rel_id)})  # ty: ignore[invalid-argument-type]
+            await session.run(Query(query), {"id": int(rel_id)})
             return True
 
     # Path Operations
@@ -294,8 +294,8 @@ class Neo4jClient:
             return []
 
         async with session:
-            result = await session.run(  # ty: ignore[invalid-argument-type]
-                query,
+            result = await session.run(
+                Query(query),
                 {"start_id": int(start_node_id), "end_id": int(end_node_id)},
             )
             paths = []
@@ -341,7 +341,7 @@ class Neo4jClient:
 
         async with session:
             # Get indexes
-            indexes_result = await session.run("SHOW INDEXES")  # ty: ignore[invalid-argument-type]
+            indexes_result = await session.run(Query("SHOW INDEXES"))
             indexes = [
                 IndexInfo(
                     name=record.get("name", ""),
@@ -353,7 +353,7 @@ class Neo4jClient:
             ]
 
             # Get constraints
-            constraints_result = await session.run("SHOW CONSTRAINTS")  # ty: ignore[invalid-argument-type]
+            constraints_result = await session.run(Query("SHOW CONSTRAINTS"))
             constraints = [
                 ConstraintInfo(
                     name=record.get("name", ""),
