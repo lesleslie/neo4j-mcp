@@ -38,13 +38,13 @@ class Neo4jClient:
     async def __aexit__(self, *args: Any) -> None:
         await self.close()
 
-    async def _ensure_driver(self) -> AsyncDriver:
+    async def _ensure_driver(self) -> AsyncDriver | None:
         """Ensure Neo4j driver is connected."""
         if self._driver is None:
             if self.settings.mock_mode:
                 # In mock mode, don't actually connect
                 logger.info("Running in mock mode - no real Neo4j connection")
-                return None  # type: ignore
+                return None
 
             self._driver = AsyncGraphDatabase.driver(
                 self.settings.uri,
