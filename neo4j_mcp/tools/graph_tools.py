@@ -18,7 +18,7 @@ logger = get_logger_instance("neo4j-mcp.tools.graph")
 def register_graph_tools(app: Any, client: Neo4jClient) -> None:
     """Register graph database tools."""
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def run_cypher(
         query: str,
         params: dict[str, Any] | None = None,
@@ -54,7 +54,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def create_node(
         labels: list[str],
         properties: dict[str, Any] | None = None,
@@ -95,7 +95,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def get_node(node_id: str) -> ToolResponse:
         """Get a node by its ID.
 
@@ -131,7 +131,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def delete_node(node_id: str) -> ToolResponse:
         """Delete a node by its ID.
 
@@ -160,7 +160,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def find_nodes(
         labels: list[str] | None = None,
         properties: dict[str, Any] | None = None,
@@ -198,7 +198,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def create_relationship(
         type: str,
         start_node_id: str,
@@ -246,7 +246,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def delete_relationship(relationship_id: str) -> ToolResponse:
         """Delete a relationship by its ID.
 
@@ -275,7 +275,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def find_paths(
         start_node_id: str,
         end_node_id: str,
@@ -328,7 +328,7 @@ def register_graph_tools(app: Any, client: Neo4jClient) -> None:
                 error=str(e),
             )
 
-    @app.tool()  # type: ignore
+    @app.tool()
     async def get_schema() -> ToolResponse:
         """Get database schema information.
 
