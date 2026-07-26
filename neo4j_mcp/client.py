@@ -86,7 +86,9 @@ class Neo4jClient:
             return []
 
         async with session:
-            result = await session.run(query  # ty: ignore[invalid-argument-type], params)
+            result = await session.run(
+                query,  # ty: ignore[invalid-argument-type]
+                params)
             records = [dict(record) async for record in result]
             return records
 
@@ -107,7 +109,8 @@ class Neo4jClient:
             return Node(labels=node.labels, properties=node.properties)
 
         async with session:
-            result = await session.run(query  # ty: ignore[invalid-argument-type], node.properties)
+            result = await session.run(
+                query,  # ty: ignore[invalid-argument-type] node.properties)
             record = await result.single()
             if record:
                 return Node(
@@ -129,7 +132,9 @@ class Neo4jClient:
             return None
 
         async with session:
-            result = await session.run(query  # ty: ignore[invalid-argument-type], {"id": int(node_id)})
+            result = await session.run(
+                query,  # ty: ignore[invalid-argument-type] {"id": int(node_id)}  # ty: ignore[invalid-argument-type]
+            )
             record = await result.single()
             if record:
                 return Node(
@@ -151,7 +156,9 @@ class Neo4jClient:
             return True
 
         async with session:
-            await session.run(query  # ty: ignore[invalid-argument-type], {"id": int(node_id)})
+            await session.run(
+                query,  # ty: ignore[invalid-argument-type] {"id": int(node_id)}  # ty: ignore[invalid-argument-type]
+            )
             return True
 
     async def find_nodes(
@@ -184,7 +191,9 @@ class Neo4jClient:
             return []
 
         async with session:
-            result = await session.run(query  # ty: ignore[invalid-argument-type], params)
+            result = await session.run(
+                query,  # ty: ignore[invalid-argument-type]
+                params)
             return [
                 Node(
                     id=str(record["id"]),
@@ -228,7 +237,9 @@ class Neo4jClient:
             )
 
         async with session:
-            result = await session.run(query  # ty: ignore[invalid-argument-type], params)
+            result = await session.run(
+                query,  # ty: ignore[invalid-argument-type]
+                params)
             record = await result.single()
             if record:
                 return Relationship(
@@ -257,7 +268,8 @@ class Neo4jClient:
             return True
 
         async with session:
-            await session.run(query  # ty: ignore[invalid-argument-type], {"id": int(rel_id)})
+            await session.run(
+                query,  # ty: ignore[invalid-argument-type] {"id": int(rel_id)})
             return True
 
     # Path Operations
@@ -295,7 +307,7 @@ class Neo4jClient:
 
         async with session:
             result = await session.run(
-                query  # ty: ignore[invalid-argument-type],
+                query,  # ty: ignore[invalid-argument-type]
                 {"start_id": int(start_node_id), "end_id": int(end_node_id)},
             )
             paths = []
