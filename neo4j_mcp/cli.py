@@ -46,21 +46,21 @@ def health_probe_handler() -> RuntimeHealthSnapshot:
     from neo4j_mcp.config import get_settings
 
     settings = get_settings()
-    return RuntimeHealthSnapshot(  # type: ignore
-        server_name="neo4j-mcp",
-        status="healthy",
-        version=__version__,
-        extra={
+    return RuntimeHealthSnapshot(
+        orchestrator_pid=os.getpid(),
+        watchers_running=True,
+        lifecycle_state={
             "uri": settings.uri,
             "database": settings.database,
             "mock_mode": settings.mock_mode,
+            "version": __version__,
         },
     )
 
 
 factory = MCPServerCLIFactory(
     server_name="neo4j-mcp",
-    settings=Neo4jSettings(),
+    settings=None,  # Auto-load via MCPServerSettings.load(server_name)
     start_handler=start_server_handler,
     health_probe_handler=health_probe_handler,
 )
