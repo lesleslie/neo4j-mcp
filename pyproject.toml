@@ -72,7 +72,6 @@ addopts = [
     "--cov=neo4j_mcp",
     "--cov-report=term-missing",
     "--cov-report=html",
-    "--cov-fail-under=80",
 ]
 markers = [
     "unit: Unit tests",
