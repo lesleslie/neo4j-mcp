@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "neo4j-mcp"
-version = "0.1.4"
+version = "0.2.0"
 description = "MCP server for Neo4j graph database operations"
 readme = "README.md"
 license = { text = "BSD-3-Clause" }
@@ -30,6 +30,14 @@ dependencies = [
 
 [tool.uv.sources]
 mcp-common = { path = "../mcp-common", editable = true }
+
+# Pin transitive deps for security (pip-audit CVE fixes). constraint-dependencies
+# affects resolution without advertising as direct deps (avoids creosote).
+[tool.uv]
+constraint-dependencies = [
+    "aiohttp>=3.14.3",
+    "cryptography>=50.0.0",
+]
 
 [dependency-groups]
 dev = [
