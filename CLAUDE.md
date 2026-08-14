@@ -21,18 +21,27 @@ For a shorter, tool-neutral bootstrap document, start with `AGENTS.md`.
 
 ## Most Common Commands
 
+The CLI is built via `mcp-common`'s `MCPServerCLIFactory` and exposes the
+standard Bodai MCP lifecycle surface (no per-flag subcommands). Connection
+overrides are environment variables, not CLI flags.
+
 ```bash
-# Run server (stdio mode)
-neo4j-mcp serve
+# Start the managed HTTP MCP server
+uv run neo4j-mcp start
 
-# Run server (HTTP mode)
-neo4j-mcp serve --http --port 3045
+# Stop / restart / status / health probes
+uv run neo4j-mcp stop
+uv run neo4j-mcp restart
+uv run neo4j-mcp status
+uv run neo4j-mcp health
 
-# With mock mode for testing
-neo4j-mcp serve --mock
+# Custom connection details via environment variables
+NEO4J_MCP_URI=bolt://localhost:7687 \
+NEO4J_MCP_DATABASE=neo4j \
+    uv run neo4j-mcp start
 
-# With custom connection
-neo4j-mcp serve --uri bolt://localhost:7687 --database neo4j
+# Mock mode (no live Neo4j required)
+NEO4J_MCP_MOCK_MODE=true uv run neo4j-mcp start
 ```
 
 ## Critical Rules
@@ -63,15 +72,9 @@ neo4j-mcp serve --uri bolt://localhost:7687 --database neo4j
 
 ## Configuration
 
-Set via environment variables with `NEO4J_MCP_` prefix:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEO4J_MCP_URI` | Neo4j URI | bolt://localhost:7687 |
-| `NEO4J_MCP_USER` | Username | neo4j |
-| `NEO4J_MCP_PASSWORD` | Password | - |
-| `NEO4J_MCP_DATABASE` | Database name | neo4j |
-| `NEO4J_MCP_MOCK_MODE` | Enable mock mode | false |
+Set via environment variables with `NEO4J_MCP_` prefix. See [README.md §
+Configuration](./README.md#configuration) for the full table (12 settings
+including connection-pool sizing, HTTP transport, and logging knobs).
 
 ## Tools Provided
 

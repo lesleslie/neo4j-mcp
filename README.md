@@ -8,7 +8,7 @@
 
 MCP server for Neo4j graph database operations.
 
-**Version:** 0.1.3
+**Version:** 0.2.0
 **Status:** Internal Bodai integration component
 
 ## Quick Links
@@ -105,7 +105,7 @@ Add the server to an MCP client configuration:
     "neo4j": {
       "command": "uv",
       "args": ["run", "neo4j-mcp", "start"],
-      "cwd": "/Users/les/Projects/neo4j-mcp",
+      "cwd": "<absolute-path-to-cloned-neo4j-mcp>",
       "env": {
         "NEO4J_MCP_URI": "bolt://localhost:7687",
         "NEO4J_MCP_USER": "neo4j",
@@ -166,6 +166,7 @@ Committed defaults live in `settings/neo4j.yaml`. Runtime overrides should come 
 | Max pool size | `NEO4J_MCP_MAX_CONNECTION_POOL_SIZE` | `50` |
 | Connection timeout | `NEO4J_MCP_CONNECTION_TIMEOUT` | `30.0` |
 | Mock mode | `NEO4J_MCP_MOCK_MODE` | `false` |
+| Enable HTTP transport | `NEO4J_MCP_ENABLE_HTTP_TRANSPORT` | `false` |
 | HTTP host | `NEO4J_MCP_HTTP_HOST` | `127.0.0.1` |
 | HTTP port | `NEO4J_MCP_HTTP_PORT` | `3045` |
 | Log level | `NEO4J_MCP_LOG_LEVEL` | `INFO` |
@@ -175,16 +176,25 @@ Committed defaults live in `settings/neo4j.yaml`. Runtime overrides should come 
 
 ```text
 neo4j_mcp/
+  __init__.py            # Package surface (__version__, model re-exports)
+  __main__.py            # Module entry point (`python -m neo4j_mcp`)
   cli.py                 # mcp-common lifecycle CLI
   client.py              # Neo4j driver boundary
   config.py              # Pydantic settings and logging
   models.py              # Typed graph request and response models
   server.py              # FastMCP application factory
-  tools/graph_tools.py   # Registered MCP tools
+  tools/
+    __init__.py          # Re-exports register_graph_tools
+    graph_tools.py       # Registered MCP tools
 settings/
-  neo4j.yaml             # Committed defaults
+  neo4j.yaml             # Committed defaults (documentation; see note below)
 tests/
 ```
+
+> **Note:** `settings/neo4j.yaml` documents the operator-facing defaults but
+> is not loaded by pydantic-settings at runtime — `Neo4jSettings` reads from
+> the `NEO4J_MCP_*` environment variables and the `.env` file only. Use
+> `settings/neo4j.yaml` as a reference when authoring your local `.env`.
 
 ## Development
 
