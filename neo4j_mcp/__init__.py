@@ -1,5 +1,7 @@
 """Neo4j MCP - MCP server for Neo4j graph database operations."""
 
+from importlib.metadata import version as _importlib_version
+
 from neo4j_mcp.config import Neo4jSettings, get_settings, setup_logging
 from neo4j_mcp.models import (
     ConstraintInfo,
@@ -14,7 +16,7 @@ from neo4j_mcp.models import (
     ToolResponse,
 )
 
-__version__ = "0.1.0"
+__version__ = _importlib_version("neo4j-mcp")
 
 __all__ = [
     "Neo4jSettings",
