@@ -12,12 +12,12 @@ health-probe deployments paid the full surface area even though they
 only needed the health probe.
 
 W4 of the MCP tool profile adoption plan (see the upstream `mahavishnu`
-design spec and implementation plan for the full program).
-introduces a 3-tier dispatch (MINIMAL / STANDARD / FULL) driven by
-the `{SERVER_NAME}_TOOL_PROFILE` env var. The W0 helper in
-mcp-common 0.18.0+ (`_apply_tool_profile` async + `apply_tool_profile`
-sync wrapper) handles the dispatch mechanics; this repo wires it in
-and enforces the W4 spec invariant.
+design spec and implementation plan for the full program) introduces
+a 3-tier dispatch (MINIMAL / STANDARD / FULL) driven by the
+`{SERVER_NAME}_TOOL_PROFILE` env var. The W0 helper in mcp-common
+0.18.0+ (`_apply_tool_profile` async + `apply_tool_profile` sync
+wrapper) handles the dispatch mechanics; this repo wires it in and
+enforces the W4 spec invariant.
 
 ## Decision
 
@@ -45,7 +45,7 @@ Two groups exist in `neo4j_mcp/tools/__init__.py`:
 1. **`health_tools`** (`register_health_tool`) — registers the MCP
    `health_check` tool + the HTTP `/health` readiness route. Always
    available at MINIMAL.
-1. **`graph_tools`** (`register_graph_tools_for_profile`) — registers
+2. **`graph_tools`** (`register_graph_tools_for_profile`) — registers
    the 9 Neo4j graph MCP tools. Available at STANDARD/FULL only.
 
 The split mirrors the W4.2 excalidraw-mcp pattern and enables
@@ -117,14 +117,18 @@ existing graph tools are unchanged.
 ## Files Touched
 
 - `neo4j_mcp/tools/__init__.py` — added `register_health_tool` +
-  `register_graph_tools_for_profile`; preserved legacy
-  `register_graph_tools` re-export for backward compat
+  `register_graph_tools_with_client` (2-arg entry point that holds
+  the client reference for lifespan cleanup) +
+  `register_graph_tools_for_profile` (backward-compat shim);
+  preserved legacy `register_graph_tools` re-export
 - `neo4j_mcp/tools/profiles.py` — NEW: dispatch machinery
 - `neo4j_mcp/server.py` — `create_app` is now async + accepts
-  caller-supplied settings; `create_app_sync` bridge for sync callers
+  caller-supplied settings; lifespan captures `Neo4jClient` and
+  closes it on shutdown
 - `pyproject.toml` — bumped `mcp-common>=0.18.0`
-- `tests/unit/test_tool_profile.py` — NEW: 24 tests covering
+- `tests/unit/test_tool_profile.py` — NEW: 26 tests covering
   structural guards, AST keystone, profile semantics, settings
-  preservation, real production-path tests, banner gating
+  preservation, lifespan cleanup, real production-path tests,
+  banner gating
 - `CLAUDE.md` — added "Tool Profile System" subsection
 - `docs/architecture/tool-profile-rationale.md` — THIS document
