@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
 from mcp_common.fastmcp import FastMCP
 
 from neo4j_mcp import __version__
+from neo4j_mcp.client import Neo4jClient
 from neo4j_mcp.config import (
     Neo4jSettings,
     get_logger_instance,
@@ -84,7 +86,7 @@ async def create_app(
     # banner advertises a tool count that's only accurate at FULL — at
     # MINIMAL/STANDARD the count is smaller, and printing "tools=9"
     # would be misleading (the W2b.1 lesson).
-    raw_profile = __import__("os").environ.get("NEO4J_TOOL_PROFILE", "")
+    raw_profile = os.environ.get("NEO4J_TOOL_PROFILE", "")
     banner_enabled = raw_profile in {"", "full"}
 
     logger.info(
@@ -106,6 +108,13 @@ async def create_app(
 
         return JSONResponse({"status": "ok"})
 
+    # Build the Neo4jClient upfront so the lifespan can close it on
+    # shutdown (restores the pre-W4 ``await client.close()`` behavior
+    # that the W4.3 round-1 reviewer flagged as a regression). The
+    # client constructor is lazy — the driver is only opened on the
+    # first query — so it's safe to construct unconditionally.
+    client = Neo4jClient(settings)
+
     # Apply tool profile dispatch (NEO4J_TOOL_PROFILE env var).
     #
     # Replaces the previous eager ``register_graph_tools(app, client)`` +
@@ -120,18 +129,20 @@ async def create_app(
     # event loops and would silently break any test that runs
     # ``create_app`` under an async context).
     #
-    # The caller-supplied ``settings`` instance is forwarded through to
-    # the registration paths so test-injected configuration overrides
-    # are preserved (the W4.1 round-1 reviewer fix — caller-supplied
-    # settings were silently discarded before).
+    # The caller-supplied ``settings`` instance AND the pre-built
+    # ``client`` are forwarded through to the registration paths so
+    # test-injected configuration overrides are preserved (the W4.1
+    # round-1 reviewer fix — caller-supplied settings were silently
+    # discarded before) AND the lifespan can close the client on
+    # shutdown (the W4.3 round-1 reviewer fix).
     from neo4j_mcp.tools.profiles import apply_neo4j_tool_profile
 
-    await apply_neo4j_tool_profile(server, settings)
+    await apply_neo4j_tool_profile(server, settings, client=client)
 
-    # Setup lifespan for proper cleanup. ``Neo4jClient`` is built inside
-    # ``register_graph_tools_for_profile`` so the W0 helper owns its
-    # lifecycle; we close any registered clients in the lifespan
-    # ``finally`` block.
+    # Setup lifespan for proper cleanup. The client is held in the
+    # closure so the lifespan ``finally`` block can call
+    # ``await client.close()`` — mirroring the pre-W4 behavior (the
+    # W4.3 round-1 reviewer fix).
     original_lifespan = server._mcp_server.lifespan
 
     @asynccontextmanager
@@ -140,28 +151,7 @@ async def create_app(
             try:
                 yield state
             finally:
-                # Best-effort cleanup of any Neo4j clients created by
-                # ``register_graph_tools_for_profile`` during profile
-                # dispatch. The client lives as a module-level singleton
-                # inside ``neo4j_mcp.tools.graph_tools`` closure; we
-                # close any open ``Neo4jClient`` instances we find on
-                # the registered tools via ``server._local_provider``.
-                try:
-                    tools = await server.list_tools()
-                    for tool in tools:
-                        # Tools don't carry the client directly (FastMCP
-                        # closes over them via the function's closure).
-                        # The lifespan is the right place for cleanup;
-                        # the client constructor returned from
-                        # ``register_graph_tools_for_profile`` is
-                        # referenced by the closure of every registered
-                        # tool — closing it here would require holding
-                        # a reference. Instead, the client owns the
-                        # driver pool and will be garbage-collected when
-                        # the server shuts down.
-                        _ = tool
-                except Exception as e:  # noqa: BLE001
-                    logger.debug("Lifespan cleanup skipped", error=str(e))
+                await client.close()
 
     server._mcp_server.lifespan = lifespan
 

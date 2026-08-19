@@ -31,6 +31,7 @@ from mcp_common.tools import ToolProfile
 from mcp_common.tools.dispatch import ALL_TOOLS
 
 from neo4j_mcp import __version__
+from neo4j_mcp.client import Neo4jClient
 from neo4j_mcp.config import Neo4jSettings
 from neo4j_mcp.server import create_app
 from neo4j_mcp.tools import profiles as _profiles_module
@@ -233,13 +234,20 @@ def test_apply_neo4j_tool_profile_signature_is_async() -> None:
     """``apply_neo4j_tool_profile`` must be ``async def`` (callers
     must ``await`` it from ``create_app``)."""
     tree = ast.parse(TOOLS_PROFILES_PATH.read_text())
-    func = next(
+    matching = [
         node
         for node in ast.walk(tree)
         if isinstance(node, ast.AsyncFunctionDef)
         and node.name == "apply_neo4j_tool_profile"
+    ]
+    assert matching, (
+        "apply_neo4j_tool_profile must be defined as `async def` in "
+        f"{TOOLS_PROFILES_PATH}. Got zero AsyncFunctionDef matches."
     )
-    assert func is not None
+    assert len(matching) == 1, (
+        f"Expected exactly 1 AsyncFunctionDef for apply_neo4j_tool_profile, "
+        f"got {len(matching)}"
+    )
 
 
 def test_apply_neo4j_tool_profile_calls_helper_not_wrapper() -> None:
@@ -448,18 +456,17 @@ async def test_create_app_full_profile_real_path() -> None:
     assert "discover_tools" in names
 
 
-async def test_create_app_standard_profile_real_path() -> None:
+async def test_create_app_standard_profile_real_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """STANDARD profile: must register the same set as FULL (Tier-A
     trivial)."""
+    monkeypatch.setenv("NEO4J_TOOL_PROFILE", "standard")
     server = FastMCP(name="test-neo4j-mcp-standard", version=__version__)
     settings = Neo4jSettings(mock_mode=True)
 
-    os.environ["NEO4J_TOOL_PROFILE"] = "standard"
-    try:
-        await create_app(settings, server)
-        names = await _list_tool_names(server)
-    finally:
-        os.environ.pop("NEO4J_TOOL_PROFILE", None)
+    await create_app(settings, server)
+    names = await _list_tool_names(server)
 
     assert "health_check" in names
     assert "run_cypher" in names, (
@@ -467,20 +474,19 @@ async def test_create_app_standard_profile_real_path() -> None:
     )
 
 
-async def test_create_app_minimal_profile_real_path() -> None:
+async def test_create_app_minimal_profile_real_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """MINIMAL profile: must register ONLY ``health_check`` +
     ``discover_tools`` (2 tools total). NO graph tools. This is the
     W4.1 critical lesson: MINIMAL must include the health probe, NOT
     rationalize to empty."""
+    monkeypatch.setenv("NEO4J_TOOL_PROFILE", "minimal")
     server = FastMCP(name="test-neo4j-mcp-minimal", version=__version__)
     settings = Neo4jSettings(mock_mode=True)
 
-    os.environ["NEO4J_TOOL_PROFILE"] = "minimal"
-    try:
-        await create_app(settings, server)
-        names = await _list_tool_names(server)
-    finally:
-        os.environ.pop("NEO4J_TOOL_PROFILE", None)
+    await create_app(settings, server)
+    names = await _list_tool_names(server)
 
     # Exactly 2 tools — health_check + discover_tools. No graph tools.
     assert names == {"health_check", "discover_tools"}, (
@@ -492,21 +498,20 @@ async def test_create_app_minimal_profile_real_path() -> None:
     assert "health_check" in names
 
 
-async def test_minimal_subset_check_is_non_empty() -> None:
+async def test_minimal_subset_check_is_non_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The ``essential_tool_names={"health_check"}`` invariant means
     ``health_check`` MUST be present after dispatch at every profile.
     A refactor that accidentally drops ``health_tools`` from MINIMAL
     will trip the W0 helper's subset check.
     """
+    monkeypatch.setenv("NEO4J_TOOL_PROFILE", "minimal")
     server = FastMCP(name="test-neo4j-mcp-subset", version=__version__)
     settings = Neo4jSettings(mock_mode=True)
 
-    os.environ["NEO4J_TOOL_PROFILE"] = "minimal"
-    try:
-        await apply_neo4j_tool_profile(server, settings)
-        names = await _list_tool_names(server)
-    finally:
-        os.environ.pop("NEO4J_TOOL_PROFILE", None)
+    await apply_neo4j_tool_profile(server, settings)
+    names = await _list_tool_names(server)
 
     assert "health_check" in names, (
         "essential_tool_names subset check must guarantee health_check"
@@ -542,23 +547,112 @@ def test_tools_registered_banner_gated_by_full_profile(
     monkeypatch.setattr(server_module.logger, "info", _Capture().info)
 
     # MINIMAL: banner must NOT fire.
-    os.environ["NEO4J_TOOL_PROFILE"] = "minimal"
-    try:
-        server = FastMCP(name="test-banner-min", version=__version__)
-        settings = Neo4jSettings(mock_mode=True)
-        asyncio.run(create_app(settings, server))
-    finally:
-        os.environ.pop("NEO4J_TOOL_PROFILE", None)
+    monkeypatch.setenv("NEO4J_TOOL_PROFILE", "minimal")
+    server = FastMCP(name="test-banner-min", version=__version__)
+    settings = Neo4jSettings(mock_mode=True)
+    asyncio.run(create_app(settings, server))
     assert captured == [], (
         f"Tools registered banner must NOT fire at MINIMAL, got: {captured}"
     )
 
     # FULL (unset): banner MUST fire.
+    monkeypatch.delenv("NEO4J_TOOL_PROFILE", raising=False)
     captured.clear()
-    os.environ.pop("NEO4J_TOOL_PROFILE", None)
     server = FastMCP(name="test-banner-full", version=__version__)
     settings = Neo4jSettings(mock_mode=True)
     asyncio.run(create_app(settings, server))
     assert captured, (
         "Tools registered banner MUST fire at FULL (or unset, defaults to FULL)"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Lifespan cleanup (W4.3 round-1 reviewer fix)
+# ---------------------------------------------------------------------------
+
+
+def test_lifespan_finally_calls_client_close() -> None:
+    """AST guard: the lifespan ``finally`` block must call
+    ``await client.close()``. The W4.3 round-1 reviewer fix —
+    restoring the pre-W4 behavior that was lost when the dispatch
+    refactor moved client construction into ``register_graph_tools_for_profile``.
+
+    The original ``create_app`` had::
+
+        @asynccontextmanager
+        async def lifespan(server):
+            async with original_lifespan(server) as state:
+                try:
+                    yield state
+                finally:
+                    await client.close()
+
+    The round-1 regression replaced this with a no-op that iterated
+    ``server.list_tools()`` and discarded each tool. This AST guard
+    fails loud if any future refactor drops the ``await client.close()``
+    call.
+    """
+    tree = ast.parse(SERVER_PATH.read_text())
+
+    # Find every Await node whose value is a Call to ``client.close``.
+    found = False
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Await)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Attribute)
+            and node.value.func.attr == "close"
+            and isinstance(node.value.func.value, ast.Name)
+            and node.value.func.value.id == "client"
+        ):
+            found = True
+            break
+
+    assert found, (
+        "server.py must `await client.close()` somewhere (typically in the "
+        "lifespan finally block). The W4.3 round-1 regression removed this "
+        "call and broke the pre-W4 shutdown behavior."
+    )
+
+
+async def test_lifespan_actually_calls_client_close_on_shutdown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """End-to-end: ``await client.close()`` is actually invoked when
+    the server lifespan exits. The W4.3 round-1 reviewer fix — the
+    lifespan finally block must close the Neo4j client (not just be
+    present in source).
+
+    We monkey-patch ``Neo4jClient.close`` to track invocations, drive
+    the lifespan, and assert the close was called.
+    """
+    monkeypatch.setenv("NEO4J_TOOL_PROFILE", "full")
+
+    close_calls: list[int] = []
+    original_close = Neo4jClient.close
+
+    async def tracking_close(self: Neo4jClient) -> None:
+        close_calls.append(1)
+        await original_close(self)
+
+    monkeypatch.setattr(Neo4jClient, "close", tracking_close)
+
+    server = FastMCP(name="test-lifespan-cleanup", version=__version__)
+    settings = Neo4jSettings(mock_mode=True)
+
+    await create_app(settings, server)
+
+    # Drive the lifespan (enter + exit). The lifespan is installed on
+    # ``server._mcp_server.lifespan`` — call it via async context manager.
+    lifespan_cm = server._mcp_server.lifespan(server)
+    async with lifespan_cm as state:
+        assert isinstance(state, dict), (
+            "lifespan should yield a state dict (FastMCP convention)"
+        )
+
+    # After lifespan exit, the finally block must have invoked close.
+    assert close_calls, (
+        "lifespan finally block did not call `await client.close()`. "
+        "The W4.3 round-1 regression — restoring this is the W4.3 "
+        "round-1 Critical fix."
     )

@@ -21,6 +21,13 @@ The dispatch surface (``PROFILE_REGISTRATIONS`` + ``REGISTRATION_MAP`` +
 by ``neo4j_mcp.server.create_app`` which delegates to
 ``mcp_common.tools.dispatch._apply_tool_profile`` (the async helper,
 NOT the sync ``apply_tool_profile`` wrapper — the W2b.3 keystone).
+
+Caller-supplied ``Neo4jClient`` threading (W4.3 round-1 reviewer fix):
+``create_app`` builds the ``Neo4jClient`` upfront so the lifespan can
+call ``await client.close()`` on shutdown (restoring the pre-W4
+behavior). The client is passed into ``apply_neo4j_tool_profile`` and
+captured by the closure for ``graph_tools`` registration at
+STANDARD/FULL.
 """
 
 from __future__ import annotations
@@ -35,6 +42,7 @@ if TYPE_CHECKING:
 
     from fastmcp import FastMCP
 
+    from neo4j_mcp.client import Neo4jClient
     from neo4j_mcp.config import Neo4jSettings
 
 # Canonical list of every register_<group>_tools group key + the matching
@@ -45,7 +53,7 @@ if TYPE_CHECKING:
 # Adding a new group requires editing only this constant (the W3.2 lesson).
 _GROUP_REGISTRY: list[tuple[str, str]] = [
     ("health_tools", "register_health_tool"),
-    ("graph_tools", "register_graph_tools_for_profile"),
+    ("graph_tools", "register_graph_tools_with_client"),
 ]
 
 # MINIMAL exposes the health probe (matches the canonical W4 mapping:
@@ -74,23 +82,28 @@ PROFILE_REGISTRATIONS: dict[
 
 def _build_registration_map(
     settings: Neo4jSettings,
+    client: Neo4jClient | None = None,
 ) -> dict[str, Callable[[FastMCP], Awaitable[None] | None]]:
     """Build the {group_key: register_fn(server)} map from ``_GROUP_REGISTRY``.
 
     Each registry entry's ``attr_name`` is looked up dynamically on the
     ``neo4j_mcp.tools`` package (no hard-coded name-specific
     conditionals). The looked-up function takes 2 arguments
-    ``(mcp, settings)``; the W0 helper expects single-arg callables, so
-    each entry is wrapped in a lambda with default-argument capture of
-    ``settings`` (the W3.1 graphics-mcp lesson + the W3.3
+    ``(mcp, settings_or_client)``; the W0 helper expects single-arg
+    callables, so each entry is wrapped in a lambda with default-arg
+    capture (the W3.1 graphics-mcp lesson + the W3.3
     ``_register_crs_with_app`` pattern).
 
     Args:
-        settings: The caller-supplied ``Neo4jSettings`` instance to bind
-            into every registration callback. Passed through from
-            ``create_app(settings)`` — NOT re-loaded from the environment
-            (the W4.1 round-1 reviewer finding: caller-supplied settings
-            were silently discarded by registration paths).
+        settings: The caller-supplied ``Neo4jSettings`` instance to
+            bind into the ``health_tools`` callback (NOT re-loaded
+            from env — the W4.1 round-1 reviewer finding).
+        client: The caller-supplied ``Neo4jClient`` to bind into the
+            ``graph_tools`` callback. When provided (recommended),
+            ``graph_tools`` registration uses this pre-built client
+            instead of constructing a new one — so ``create_app`` can
+            hold the reference and close it in the lifespan finally
+            block (the W4.3 round-1 reviewer fix).
 
     Returns:
         Mapping from group key (e.g. ``"health_tools"``) to a single-arg
@@ -101,13 +114,26 @@ def _build_registration_map(
     mapping: dict[str, Callable[[FastMCP], Awaitable[None] | None]] = {}
     for key, attr_name in _GROUP_REGISTRY:
         register_fn = getattr(_tools_module, attr_name)
+        # Bind the appropriate second argument based on group:
+        #   - graph_tools: pre-built client (lifecycle managed by caller)
+        #   - health_tools: settings (lightweight, no cleanup needed)
+        if key == "graph_tools":
+            second_arg = client if client is not None else settings
+        else:
+            second_arg = settings
         # Default-arg capture avoids late-binding bugs (W3.1 lesson) and
-        # binds the CALLER'S settings, not an env-loaded one.
-        mapping[key] = lambda server, _fn=register_fn, _cfg=settings: _fn(server, _cfg)
+        # binds the CALLER'S settings/client, not an env-loaded one.
+        mapping[key] = lambda server, _fn=register_fn, _arg=second_arg: _fn(
+            server, _arg
+        )
     return mapping
 
 
-def register_all_tool_groups(server: FastMCP, settings: Neo4jSettings) -> None:
+def register_all_tool_groups(
+    server: FastMCP,
+    settings: Neo4jSettings,
+    client: Neo4jClient | None = None,
+) -> None:
     """Bulk register every neo4j-mcp tool group (called at FULL profile).
 
     Iterates ``_GROUP_REGISTRY`` directly — no name-specific conditionals.
@@ -118,16 +144,29 @@ def register_all_tool_groups(server: FastMCP, settings: Neo4jSettings) -> None:
     Args:
         server: FastMCP server instance.
         settings: The caller-supplied ``Neo4jSettings`` to pass through
-            to every group registration (NOT re-loaded from env — the
-            W4.1 round-1 reviewer fix).
+            to ``health_tools`` (NOT re-loaded from env — the W4.1
+            round-1 reviewer fix).
+        client: The caller-supplied ``Neo4jClient`` to pass through to
+            ``graph_tools``. When provided, no new client is constructed
+            inside the dispatch (the W4.3 round-1 reviewer fix).
     """
     from neo4j_mcp import tools as _tools_module
 
-    for _key, attr_name in _GROUP_REGISTRY:
-        getattr(_tools_module, attr_name)(server, settings)
+    for key, attr_name in _GROUP_REGISTRY:
+        register_fn = getattr(_tools_module, attr_name)
+        if key == "graph_tools":
+            second_arg = client if client is not None else settings
+        else:
+            second_arg = settings
+        register_fn(server, second_arg)
 
 
-async def apply_neo4j_tool_profile(server: FastMCP, settings: Neo4jSettings) -> None:
+async def apply_neo4j_tool_profile(
+    server: FastMCP,
+    settings: Neo4jSettings,
+    *,
+    client: Neo4jClient | None = None,
+) -> None:
     """Apply the NEO4J_TOOL_PROFILE dispatch to ``server`` at startup.
 
     Async because the W0 helper is async; called from
@@ -148,6 +187,16 @@ async def apply_neo4j_tool_profile(server: FastMCP, settings: Neo4jSettings) -> 
     present at every profile (the canonical MINIMAL=health mapping).
     The subset check fails loud if a future refactor accidentally drops
     the health tool from a profile.
+
+    Args:
+        server: FastMCP server instance.
+        settings: The caller-supplied ``Neo4jSettings``.
+        client: Optional pre-built ``Neo4jClient``. When provided, the
+            ``graph_tools`` registration uses this client instead of
+            constructing a new one — so ``create_app`` can hold the
+            reference and call ``await client.close()`` on shutdown
+            (the W4.3 round-1 reviewer fix that restores the pre-W4
+            ``await client.close()`` lifespan behavior).
     """
     from mcp_common.tools.dispatch import _apply_tool_profile
 
@@ -155,8 +204,10 @@ async def apply_neo4j_tool_profile(server: FastMCP, settings: Neo4jSettings) -> 
         server,
         profile_env_var="NEO4J_TOOL_PROFILE",
         registrations=PROFILE_REGISTRATIONS,
-        registration_map=_build_registration_map(settings),
-        register_all_fn=lambda server: register_all_tool_groups(server, settings),
+        registration_map=_build_registration_map(settings, client=client),
+        register_all_fn=lambda server: register_all_tool_groups(
+            server, settings, client=client
+        ),
         mandatory_groups=set(),
         essential_tool_names={"health_check"},
     )

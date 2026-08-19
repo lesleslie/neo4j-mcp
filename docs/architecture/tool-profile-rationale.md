@@ -11,8 +11,8 @@ all 9 to every Claude session regardless of role. Control-plane /
 health-probe deployments paid the full surface area even though they
 only needed the health probe.
 
-W4 of the MCP tool profile adoption plan ([spec](../superpowers/specs/2026-08-18-mcp-tool-profile-adoption-design.md),
-[plan](../superpowers/plans/2026-08-18-mcp-tool-profile-adoption.md))
+W4 of the MCP tool profile adoption plan (see the upstream `mahavishnu`
+design spec and implementation plan for the full program).
 introduces a 3-tier dispatch (MINIMAL / STANDARD / FULL) driven by
 the `{SERVER_NAME}_TOOL_PROFILE` env var. The W0 helper in
 mcp-common 0.18.0+ (`_apply_tool_profile` async + `apply_tool_profile`
@@ -24,11 +24,11 @@ and enforces the W4 spec invariant.
 **Adopt ToolProfile dispatch with the canonical Tier-A trivial
 mapping: `MINIMAL=health`, `STANDARD/FULL=all`.**
 
-| Profile  | Tools registered                                |
+| Profile | Tools registered |
 |----------|-------------------------------------------------|
-| MINIMAL  | `health_check` + `discover_tools`               |
+| MINIMAL | `health_check` + `discover_tools` |
 | STANDARD | All 9 graph tools + `health_check` + `discover_tools` |
-| FULL     | All 9 graph tools + `health_check` + `discover_tools` (via `register_all_fn` bulk path) |
+| FULL | All 9 graph tools + `health_check` + `discover_tools` (via `register_all_fn` bulk path) |
 
 The mapping is driven by the `NEO4J_TOOL_PROFILE` env var (default
 FULL when unset, per spec). `essential_tool_names={"health_check"}`
@@ -45,7 +45,7 @@ Two groups exist in `neo4j_mcp/tools/__init__.py`:
 1. **`health_tools`** (`register_health_tool`) — registers the MCP
    `health_check` tool + the HTTP `/health` readiness route. Always
    available at MINIMAL.
-2. **`graph_tools`** (`register_graph_tools_for_profile`) — registers
+1. **`graph_tools`** (`register_graph_tools_for_profile`) — registers
    the 9 Neo4j graph MCP tools. Available at STANDARD/FULL only.
 
 The split mirrors the W4.2 excalidraw-mcp pattern and enables

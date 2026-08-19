@@ -12,9 +12,12 @@ hierarchy (see ``neo4j_mcp.tools.profiles``). Two groups exist:
 The split mirrors excalidraw-mcp's W4.2 pattern and enables
 ``MINIMAL=health`` without re-loading Neo4j state at startup.
 
-The ``register_graph_tools_for_profile`` wrapper threads the caller-
-supplied ``Neo4jSettings`` through to the existing ``register_graph_tools``
-implementation (which expects a constructed ``Neo4jClient`` instance).
+``register_graph_tools_for_profile`` constructs a ``Neo4jClient`` from
+the caller-supplied ``Neo4jSettings`` (lazy — does NOT open a driver
+until first query) and returns it so ``create_app`` can hold the
+reference and call ``await client.close()`` in the lifespan shutdown
+block. This restores the pre-W4 lifecycle (the original
+``create_app`` had ``await client.close()`` in the lifespan finally).
 
 Backward-compat: ``register_graph_tools`` (the original 2-arg signature
 taking ``(app, client)``) is still re-exported so existing callers
@@ -37,6 +40,7 @@ __all__ = [
     "register_health_tool",
     "register_graph_tools",
     "register_graph_tools_for_profile",
+    "register_graph_tools_with_client",
 ]
 
 
@@ -89,28 +93,55 @@ def register_health_tool(mcp: FastMCP, settings: Neo4jSettings) -> None:
     )
 
 
-def register_graph_tools_for_profile(mcp: FastMCP, settings: Neo4jSettings) -> None:
-    """Register the 9 Neo4j graph MCP tools (the FULL/STANDARD surface).
+def register_graph_tools_with_client(mcp: FastMCP, client: Neo4jClient) -> None:
+    """Register the 9 Neo4j graph MCP tools with a pre-built client.
 
-    Threads the caller-supplied ``Neo4jSettings`` into the existing
-    ``register_graph_tools(app, client)`` by constructing the
-    ``Neo4jClient`` from the settings. This is the profile-aware entry
-    point that the W0 helper dispatches to at STANDARD/FULL profiles.
+    Profile-aware entry point when the caller has already constructed
+    the ``Neo4jClient`` (e.g. ``create_app`` builds it upfront so the
+    lifespan can call ``await client.close()`` on shutdown — the W4.3
+    round-1 reviewer fix). When the caller wants the client built
+    automatically, use ``register_graph_tools_for_profile`` instead.
 
-    The client lifecycle is managed by the server lifespan in
-    ``neo4j_mcp.server.create_app`` — the client is closed in the
-    lifespan ``finally`` block, so we do NOT call ``close()`` here.
+    Args:
+        mcp: FastMCP server instance.
+        client: The caller-supplied ``Neo4jClient``. Returned unchanged
+            so the caller can retain a reference for cleanup.
+    """
+    from neo4j_mcp.tools.graph_tools import register_graph_tools
+
+    register_graph_tools(mcp, client)
+
+
+def register_graph_tools_for_profile(
+    mcp: FastMCP, settings: Neo4jSettings
+) -> Neo4jClient:
+    """Register the 9 Neo4j graph MCP tools and return the client.
+
+    Convenience wrapper for the W0 helper's profile dispatch path.
+    Constructs a fresh ``Neo4jClient`` from ``settings`` (lazy — does
+    not open a driver until first query), registers the graph tools,
+    and returns the client so callers that need lifecycle management
+    (e.g. ``create_app``'s lifespan) can close it.
+
+    NOTE: when called via the W0 helper's ``register_all_fn``, the
+    helper discards this return value. To retain the client reference
+    across the lifespan, build the client in ``create_app`` and use
+    ``register_graph_tools_with_client`` via ``register_all_tool_groups``.
 
     Args:
         mcp: FastMCP server instance.
         settings: The caller-supplied ``Neo4jSettings`` (NOT re-loaded
             from env — the W4.1 round-1 reviewer fix).
+
+    Returns:
+        The constructed ``Neo4jClient`` so callers can close it on
+        shutdown.
     """
     from neo4j_mcp.client import Neo4jClient
-    from neo4j_mcp.tools.graph_tools import register_graph_tools
 
-    client: Neo4jClient = Neo4jClient(settings)
-    register_graph_tools(mcp, client)
+    client = Neo4jClient(settings)
+    register_graph_tools_with_client(mcp, client)
+    return client
 
 
 # Original 2-arg signature preserved for backward compat. New profile-aware
