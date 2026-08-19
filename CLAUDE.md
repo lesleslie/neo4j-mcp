@@ -76,6 +76,32 @@ Set via environment variables with `NEO4J_MCP_` prefix. See [README.md §
 Configuration](./README.md#configuration) for the full table (12 settings
 including connection-pool sizing, HTTP transport, and logging knobs).
 
+## Tool Profile System
+
+neo4j-mcp exposes its MCP tool surface via a 3-tier profile dispatch
+(mcp-common 0.18.0+ W0 helper). Profiles are selected via the
+`NEO4J_TOOL_PROFILE` env var:
+
+| Profile | Tools registered |
+|----------|-------------------------------------------------------------------|
+| MINIMAL | `health_check` + `discover_tools` |
+| STANDARD | All 9 graph tools + `health_check` + `discover_tools` |
+| FULL | Same as STANDARD (Tier-A trivial — `STANDARD == FULL`) |
+| unset | FULL (default per spec) |
+
+`essential_tool_names={"health_check"}` enforces the W4 invariant
+that `health_check` MUST be present at every profile. The dispatch
+runs inside `neo4j_mcp.server.create_app` via the async
+`_apply_tool_profile` helper (NOT the sync `apply_tool_profile`
+wrapper — the W2b.3 spline keystone).
+
+The startup banner (`Tools registered`) is gated behind
+`NEO4J_TOOL_PROFILE in {"", "full"}` — at MINIMAL/STANDARD it would
+otherwise advertise a misleading tool count (the W2b.1 lesson).
+
+See [docs/architecture/tool-profile-rationale.md](docs/architecture/tool-profile-rationale.md)
+for the full rationale.
+
 ## Tools Provided
 
 **Queries:**
