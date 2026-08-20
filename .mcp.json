@@ -1,0 +1,6 @@
+{
+  "neo4j": {
+    "type": "http",
+    "url": "http://localhost:3045/mcp"
+  }
+}

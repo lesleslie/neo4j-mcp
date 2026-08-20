@@ -1,0 +1,17 @@
+{
+  "author": {
+    "name": "Bodai"
+  },
+  "description": "Bodai plugin for the neo4j-mcp Cypher/graph database server.",
+  "keywords": [
+    "bodai",
+    "mcp",
+    "neo4j",
+    "graph",
+    "cypher"
+  ],
+  "mcpServers": "./.mcp.json",
+  "name": "neo4j",
+  "schema_version": "1.0.0",
+  "version": "0.1.0"
+}
