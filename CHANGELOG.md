@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-20
+
+### Added
+
+- neo4j-mcp: Adopt ToolProfile dispatch (W4.3)
+- neo4j: Bodai plugin conversion (manifest, mcp.json, slash commands)
+
+### Fixed
+
+- neo4j-mcp: Apply W4.3 round 1 re-review Minor items
+- neo4j-mcp: Remove unused os import
+- neo4j-mcp: Restore client.close() in lifespan, fix os import (W4.3 round 1)
+
+### Internal
+
+- gitignore: Untrack .pyscn/ (bodai 2026-08-20)
+- neo4j-mcp: Add [tool.creosote] to skip self-tool scan
+- neo4j-mcp: Bootstrap [tool.crackerjack] section + uv sync upgrade
+- neo4j-mcp: Gitignore .lycheecache (file, not just dir)
+- neo4j-mcp: Gitignore .lycheecache + .hypothesis
+- neo4j-mcp: Refresh oneiric + mcp-common deps
+- neo4j-mcp: Untrack .lycheecache + .hypothesis runtime artifacts
+
 ## [0.2.1] - 2026-08-16
 
 ### Documentation
