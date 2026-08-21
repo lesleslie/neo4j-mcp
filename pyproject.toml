@@ -103,6 +103,9 @@ exclude_lines = [
 exclude_dirs = [".venv", "tests"]
 skips = ["B101"]
 
+[tool.creosote]
+exclude-deps = ["crackerjack"]
+
 [tool.crackerjack]
 # Baseline configuration (auto-bootstrapped 2026-08-20).
 # Hook stages run on `crackerjack run`; see crackerjack --help for the
