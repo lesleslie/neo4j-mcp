@@ -45,7 +45,7 @@ Two groups exist in `neo4j_mcp/tools/__init__.py`:
 1. **`health_tools`** (`register_health_tool`) — registers the MCP
    `health_check` tool + the HTTP `/health` readiness route. Always
    available at MINIMAL.
-2. **`graph_tools`** (`register_graph_tools_for_profile`) — registers
+1. **`graph_tools`** (`register_graph_tools_for_profile`) — registers
    the 9 Neo4j graph MCP tools. Available at STANDARD/FULL only.
 
 The split mirrors the W4.2 excalidraw-mcp pattern and enables
