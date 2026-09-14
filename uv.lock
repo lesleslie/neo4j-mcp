@@ -2081,7 +2081,7 @@ wheels = [
 
 [[package]]
 name = "mcp-common"
-version = "0.24.0"
+version = "0.26.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -2096,9 +2096,9 @@ dependencies = [
     { name = "typer" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7c/f1/eb692c180ae3bd7700f65c32c918914aaae5b956f203d193e90cf77b32bd/mcp_common-0.24.0.tar.gz", hash = "sha256:db2e860e9337dadac42ec8a96478bc884c2ab0914f7a179beed425f06b38dad4", size = 965131, upload-time = "2026-08-29T16:20:38.009Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/fe/c59133220f225a42e0becc3dc876fb6b781dfb0db156561dbc125a7301e6/mcp_common-0.26.0.tar.gz", hash = "sha256:26fecaacec8df0ff0f70a0246d8892f3b04de2dda2a2c9895411cd44a5072106", size = 1089253, upload-time = "2026-09-14T08:50:14.373Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/12/042075393dbf8cf7e7794e6702a072856850d61deed029b792355024cb96/mcp_common-0.24.0-py3-none-any.whl", hash = "sha256:3c6371abb560bb312bd8f5eb0d9f5978bfb21e6fab73bf7665ff6990e9914730", size = 404168, upload-time = "2026-08-29T16:20:36.567Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/a4/9ae692cab3f8a444505e070b18b36c4852e7b07d6de696205a07dd2739da/mcp_common-0.26.0-py3-none-any.whl", hash = "sha256:cb303438ccea67782a5411f5900bcfde0a541ed84bfbe343c9475b1ce8074a9b", size = 436579, upload-time = "2026-09-14T08:50:12.864Z" },
 ]
 
 [[package]]
@@ -2414,7 +2414,7 @@ wheels = [
 
 [[package]]
 name = "neo4j-mcp"
-version = "0.4.0"
+version = "0.4.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
@@ -2441,7 +2441,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=3.4.0,<4" },
-    { name = "mcp-common", specifier = ">=0.18.0" },
+    { name = "mcp-common", specifier = ">=0.26.0,<0.27.0" },
     { name = "neo4j", specifier = ">=5.0.0" },
     { name = "oneiric", specifier = ">=0.16.0" },
     { name = "pydantic", specifier = ">=2.10.0" },
