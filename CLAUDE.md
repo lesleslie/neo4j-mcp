@@ -149,8 +149,7 @@ Every registered tool must have a working data feed exposing
 End-to-end smoke tests in CI must spin up the server and assert non-empty
 responses per tool. Monthly audit cadence.
 
-Canonical rule: `.claude/decisions/mcp-backend-wiring-discipline.md`
-(lives in the mahavishnu repo and is cross-referenced for the ecosystem).
+Canonical rule: `.claude/decisions/mcp-backend-wiring-discipline.md`.
 
 When adding any new MCP tool to this repo:
 
@@ -158,13 +157,3 @@ When adding any new MCP tool to this repo:
 - [ ] Data feed exposes the four mandatory metrics.
 - [ ] `/health` aggregator includes this feed's state.
 - [ ] CI smoke test calls this tool and asserts non-empty response.
-
-## Bodai integration
-
-When installed alongside the [Bodai ecosystem](https://github.com/lesleslie/bodai),
-neo4j-mcp follows the shared cross-repo conventions: Crackerjack for CI/CD
-quality gates, the four mcp-common baseline tools (`discover_tools`,
-`get_liveness`, `get_readiness`, `health_check_all`), and the MCP wiring
-discipline documented in `mahavishnu/.claude/decisions/mcp-backend-wiring-discipline.md`.
-No Bodai-specific code is imported at runtime — integration is purely via
-shared conventions.

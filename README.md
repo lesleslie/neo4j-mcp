@@ -23,7 +23,7 @@ MCP server for Neo4j graph database operations.
 
 ## Quality & CI
 
-Crackerjack is the standard quality-control and CI/CD gate for Neo4j MCP changes. Local verification should mirror the Crackerjack workflow used across the Bodai ecosystem.
+Crackerjack is the standard quality-control and CI/CD gate for Neo4j MCP changes. Local verification should mirror the Crackerjack workflow.
 
 ______________________________________________________________________
 
@@ -222,3 +222,7 @@ uv run pytest tests -k graph -v
 - Prefer parameterized Cypher through `params` when passing user-controlled values.
 - Treat `run_cypher` as a privileged tool because it can mutate data.
 - Use database permissions and separate users to constrain agent-accessible operations.
+
+Built on [Oneiric](https://github.com/lesleslie/oneiric) for runtime configuration
+and [mcp-common](https://github.com/lesleslie/mcp-common) for the FastMCP
+baseline. [Crackerjack](https://github.com/lesleslie/crackerjack) gates every commit.
