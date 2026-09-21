@@ -1,14 +1,12 @@
 {
   "author": {
-    "name": "Bodai"
+    "name": "Wedgwood Web Works"
   },
-  "description": "Bodai plugin for the neo4j-mcp Cypher/graph database server.",
+  "description": "Plugin for the neo4j-mcp Cypher/graph database server.",
   "keywords": [
-    "bodai",
     "mcp",
     "neo4j",
-    "graph",
-    "cypher"
+    "graph-database"
   ],
   "mcpServers": "./.mcp.json",
   "name": "neo4j",
