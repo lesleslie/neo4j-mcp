@@ -22,7 +22,7 @@ For a shorter, tool-neutral bootstrap document, start with `AGENTS.md`.
 ## Most Common Commands
 
 The CLI is built via `mcp-common`'s `MCPServerCLIFactory` and exposes the
-standard Bodai MCP lifecycle surface (no per-flag subcommands). Connection
+standard MCP lifecycle surface (no per-flag subcommands). Connection
 overrides are environment variables, not CLI flags.
 
 ```bash
@@ -138,22 +138,33 @@ for the full rationale.
 - **[README.md](./README.md)**: Complete project documentation
 - **[mcp-common](../mcp-common)**: Shared MCP utilities
 
-## MCP Backend Wiring Discipline (Bodai-wide)
+## MCP Backend Wiring Discipline
 
-Every Bodai MCP server's `/health` endpoint must aggregate per-feed state
+Every MCP server's `/health` endpoint must aggregate per-feed state
 (`healthy | degraded | dead`) and return 503 when any feed is not healthy.
 Every registered tool must have a working data feed exposing
 `feed.entities_count`, `feed.last_updated_timestamp`, `feed.errors_total`,
 `feed.cycles_total`. Every tool registration requires
 `tests/integration/test_<tool>_e2e.py` asserting non-empty results.
 End-to-end smoke tests in CI must spin up the server and assert non-empty
-responses per tool. Monthly Bodai-wide audit cadence.
+responses per tool. Monthly audit cadence.
 
 Canonical rule: `.claude/decisions/mcp-backend-wiring-discipline.md`
 (lives in the mahavishnu repo and is cross-referenced for the ecosystem).
 
 When adding any new MCP tool to this repo:
+
 - [ ] Tool registration includes `tests/integration/test_<tool>_e2e.py`.
 - [ ] Data feed exposes the four mandatory metrics.
 - [ ] `/health` aggregator includes this feed's state.
 - [ ] CI smoke test calls this tool and asserts non-empty response.
+
+## Bodai integration
+
+When installed alongside the [Bodai ecosystem](https://github.com/lesleslie/bodai),
+neo4j-mcp follows the shared cross-repo conventions: Crackerjack for CI/CD
+quality gates, the four mcp-common baseline tools (`discover_tools`,
+`get_liveness`, `get_readiness`, `health_check_all`), and the MCP wiring
+discipline documented in `mahavishnu/.claude/decisions/mcp-backend-wiring-discipline.md`.
+No Bodai-specific code is imported at runtime — integration is purely via
+shared conventions.
